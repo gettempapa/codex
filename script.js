@@ -1,214 +1,89 @@
-const resultEl = document.querySelector('#result');
-const expressionEl = document.querySelector('#expression');
-const keysEl = document.querySelector('.keys');
+const counterEl = document.querySelector('#counter');
+const thermometerEl = document.querySelector('#thermometer');
+const fillEl = document.querySelector('#thermometerFill');
+const bulbEl = document.querySelector('#thermometerBulb');
+const temperatureEl = document.querySelector('#temperatureValue');
 
-const state = {
-  current: '0',
-  previous: null,
-  operator: null,
-  overwrite: false,
-};
+const MAX_COUNT = 50000;
+const COLOR_START = { h: 205, s: 86, l: 58 }; // chilly blue
+const COLOR_END = { h: 5, s: 88, l: 52 }; // molten red
 
-function updateDisplay() {
-  resultEl.textContent = state.current;
+let ticking = false;
 
-  if (state.operator && state.previous !== null) {
-    expressionEl.textContent = `${state.previous} ${symbolForOperator(state.operator)}`;
-  } else {
-    expressionEl.textContent = '';
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function lerp(start, end, t) {
+  return start + (end - start) * t;
+}
+
+function hslToCss({ h, s, l }) {
+  return `hsl(${h.toFixed(1)}, ${s.toFixed(1)}%, ${l.toFixed(1)}%)`;
+}
+
+function mixColor(t) {
+  return {
+    h: lerp(COLOR_START.h, COLOR_END.h, t),
+    s: lerp(COLOR_START.s, COLOR_END.s, t),
+    l: lerp(COLOR_START.l, COLOR_END.l, t),
+  };
+}
+
+function adjustLightness(color, delta) {
+  return { ...color, l: clamp(color.l + delta, 0, 100) };
+}
+
+function updateVisuals(progress) {
+  const eased = progress ** 1.15;
+  const count = Math.round(eased * MAX_COUNT);
+  const percent = Math.round(progress * 100);
+
+  counterEl.textContent = count.toLocaleString('en-US');
+  temperatureEl.textContent = `${percent}%`;
+
+  thermometerEl.style.setProperty('--fill-progress', eased.toString());
+
+  const color = mixColor(progress);
+  const lightColor = adjustLightness(color, 18);
+  const glowColor = adjustLightness(color, -12);
+
+  const colorCss = hslToCss(color);
+  const lightCss = hslToCss(lightColor);
+  const glowCss = hslToCss(glowColor);
+
+  thermometerEl.style.setProperty('--fill-color', colorCss);
+  thermometerEl.style.setProperty('--fill-color-light', lightCss);
+
+  fillEl.style.boxShadow = `0 0 30px ${colorCss}`;
+  bulbEl.style.background = colorCss;
+  bulbEl.style.boxShadow = `inset 0 -10px 30px rgba(15, 23, 42, 0.4), 0 18px 45px ${glowCss}`;
+}
+
+function calculateProgress() {
+  const doc = document.documentElement;
+  const scrollable = doc.scrollHeight - window.innerHeight;
+  if (scrollable <= 0) {
+    return 0;
+  }
+  const progress = window.scrollY / scrollable;
+  return clamp(progress, 0, 1);
+}
+
+function handleScroll() {
+  if (!ticking) {
+    window.requestAnimationFrame(() => {
+      const progress = calculateProgress();
+      updateVisuals(progress);
+      ticking = false;
+    });
+    ticking = true;
   }
 }
 
-function symbolForOperator(operator) {
-  return (
-    {
-      '+': '+',
-      '-': '−',
-      '*': '×',
-      '/': '÷',
-    }[operator] || ''
-  );
-}
+window.addEventListener('scroll', handleScroll, { passive: true });
+window.addEventListener('resize', handleScroll);
 
-function inputDigit(digit) {
-  if (state.overwrite) {
-    state.current = digit === '.' ? '0.' : digit;
-    state.overwrite = false;
-    updateDisplay();
-    return;
-  }
-
-  if (digit === '.') {
-    if (!state.current.includes('.')) {
-      state.current += '.';
-    }
-  } else {
-    state.current = state.current === '0' ? digit : state.current + digit;
-  }
-
-  updateDisplay();
-}
-
-function clearState() {
-  state.current = '0';
-  state.previous = null;
-  state.operator = null;
-  state.overwrite = false;
-  updateDisplay();
-}
-
-function toggleSign() {
-  if (state.current === '0') return;
-  state.current = state.current.startsWith('-')
-    ? state.current.slice(1)
-    : `-${state.current}`;
-  updateDisplay();
-}
-
-function applyPercent() {
-  const value = parseFloat(state.current);
-  if (Number.isNaN(value)) return;
-  state.current = (value / 100).toString();
-  updateDisplay();
-}
-
-function setOperator(operator) {
-  const currentValue = parseFloat(state.current);
-
-  if (state.operator && state.previous !== null && !state.overwrite) {
-    const result = evaluate(state.previous, currentValue, state.operator);
-    if (result !== null) {
-      state.previous = result;
-      state.current = String(result);
-    }
-  } else {
-    state.previous = currentValue;
-  }
-
-  state.operator = operator;
-  state.overwrite = true;
-  updateDisplay();
-}
-
-function evaluate(previous, current, operator) {
-  let result = null;
-  switch (operator) {
-    case '+':
-      result = previous + current;
-      break;
-    case '-':
-      result = previous - current;
-      break;
-    case '*':
-      result = previous * current;
-      break;
-    case '/':
-      if (current === 0) {
-        resultEl.textContent = 'Nope';
-        expressionEl.textContent = '';
-        state.current = '0';
-        state.previous = null;
-        state.operator = null;
-        state.overwrite = true;
-        return null;
-      }
-      result = previous / current;
-      break;
-    default:
-      return null;
-  }
-  return parseFloat(result.toFixed(10));
-}
-
-function handleEquals() {
-  if (state.operator === null || state.previous === null) {
-    return;
-  }
-  const currentValue = parseFloat(state.current);
-  const computation = evaluate(state.previous, currentValue, state.operator);
-  if (computation === null) {
-    return;
-  }
-  state.current = String(computation);
-  state.previous = null;
-  state.operator = null;
-  state.overwrite = true;
-  updateDisplay();
-}
-
-function handleKey({ target }) {
-  if (!(target instanceof HTMLButtonElement)) return;
-
-  if (target.dataset.digit) {
-    inputDigit(target.dataset.digit);
-    return;
-  }
-
-  if (target.dataset.operator) {
-    setOperator(target.dataset.operator);
-    return;
-  }
-
-  switch (target.dataset.action) {
-    case 'clear':
-      clearState();
-      break;
-    case 'sign':
-      toggleSign();
-      break;
-    case 'percent':
-      applyPercent();
-      break;
-    case 'equals':
-      handleEquals();
-      break;
-    default:
-      break;
-  }
-}
-
-function handleKeyboard(event) {
-  const { key } = event;
-
-  if (/[0-9]/.test(key)) {
-    inputDigit(key);
-    return;
-  }
-
-  if (key === '.') {
-    inputDigit(key);
-    return;
-  }
-
-  if (['+', '-', '*', '/'].includes(key)) {
-    event.preventDefault();
-    setOperator(key);
-    return;
-  }
-
-  if (key === 'Enter' || key === '=') {
-    event.preventDefault();
-    handleEquals();
-    return;
-  }
-
-  if (key === 'Backspace') {
-    if (state.overwrite || state.current.length === 1) {
-      state.current = '0';
-    } else {
-      state.current = state.current.slice(0, -1);
-    }
-    state.overwrite = false;
-    updateDisplay();
-    return;
-  }
-
-  if (key === 'Escape') {
-    clearState();
-  }
-}
-
-keysEl.addEventListener('click', handleKey);
-window.addEventListener('keydown', handleKeyboard);
-
-updateDisplay();
+document.addEventListener('DOMContentLoaded', () => {
+  updateVisuals(calculateProgress());
+});
