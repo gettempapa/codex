@@ -3,47 +3,68 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Green &amp; Purple Calculator</title>
+    <title>Scroll Heat Thermometer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="app">
-      <section class="calculator" aria-label="Calculator">
-        <header class="display" aria-live="polite">
-          <div class="expression" id="expression" aria-hidden="true"></div>
-          <output class="result" id="result" role="status" aria-live="polite">0</output>
-        </header>
-        <div class="keys" role="group" aria-label="Calculator keys">
-          <button type="button" class="key key--function" data-action="clear">AC</button>
-          <button type="button" class="key key--function" data-action="sign">±</button>
-          <button type="button" class="key key--function" data-action="percent">%</button>
-          <button type="button" class="key key--operator" data-operator="/">÷</button>
+    <main class="page" aria-label="Scroll activated heat counter">
+      <section class="hero">
+        <p class="eyebrow">Scroll to warm things up</p>
+        <div class="counter" id="counter" aria-live="polite">0</div>
+        <p class="subtitle">
+          Each swipe turns up the heat and charges the city for a sunrise.
+        </p>
+        <div class="scroll-hint" aria-hidden="true">Keep swiping ↓</div>
+      </section>
 
-          <button type="button" class="key" data-digit="7">7</button>
-          <button type="button" class="key" data-digit="8">8</button>
-          <button type="button" class="key" data-digit="9">9</button>
-          <button type="button" class="key key--operator" data-operator="*">×</button>
-
-          <button type="button" class="key" data-digit="4">4</button>
-          <button type="button" class="key" data-digit="5">5</button>
-          <button type="button" class="key" data-digit="6">6</button>
-          <button type="button" class="key key--operator" data-operator="-">−</button>
-
-          <button type="button" class="key" data-digit="1">1</button>
-          <button type="button" class="key" data-digit="2">2</button>
-          <button type="button" class="key" data-digit="3">3</button>
-          <button type="button" class="key key--operator" data-operator="+">+</button>
-
-          <button type="button" class="key key--wide" data-digit="0">0</button>
-          <button type="button" class="key" data-digit=".">.</button>
-          <button type="button" class="key key--operator" data-action="equals">=</button>
+      <section class="thermometer-card">
+        <h2 class="thermometer-title">Ambient Energy Thermometer</h2>
+        <div class="thermometer" id="thermometer" role="presentation">
+          <div class="thermometer__stem">
+            <div class="thermometer__track">
+              <div class="thermometer__fill" id="thermometerFill"></div>
+            </div>
+          </div>
+          <div class="thermometer__bulb" id="thermometerBulb"></div>
         </div>
+        <div class="temperature-readout" aria-live="polite">
+          <span class="temperature-value" id="temperatureValue">0%</span>
+          warmed
+        </div>
+      </section>
+
+      <section class="story">
+        <h2>Gather momentum</h2>
+        <p>
+          The higher the counter climbs, the more energy flows into the virtual
+          grid. Imagine thousands of small generators feeding a single city
+          block. Every scroll is another pulse of power raising the collective
+          temperature.
+        </p>
+      </section>
+
+      <section class="story">
+        <h2>Watch the color shift</h2>
+        <p>
+          The thermometer moves through a gradient from arctic blue to molten
+          red. The stem reacts instantly as your scroll adds more charge. Slow
+          down to hover in the balmy midtones or race toward the blazing peak.
+        </p>
+      </section>
+
+      <section class="story">
+        <h2>Reach the summit</h2>
+        <p>
+          When the counter maxes out, the bar glows in vivid crimson, showing
+          that the grid is fully energized. Scroll back up to cool things off,
+          or run it again to watch the transition unfold.
+        </p>
       </section>
     </main>
     <script src="script.js" type="module"></script>
